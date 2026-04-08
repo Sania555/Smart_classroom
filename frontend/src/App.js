@@ -10,6 +10,7 @@ import StudentDashboard from './pages/student/Dashboard';
 import StudentTimetable from './pages/student/Timetable';
 import MarkAttendance from './pages/student/MarkAttendance';
 import AttendanceHistory from './pages/student/AttendanceHistory';
+import RegisterFace from './pages/student/RegisterFace';
 import Notifications from './pages/Notifications';
 import TeacherDashboard from './pages/teacher/Dashboard';
 import TeacherTimetable from './pages/teacher/Timetable';
@@ -46,6 +47,7 @@ export default function App() {
               <Route path="student/timetable" element={<PrivateRoute role="student"><StudentTimetable /></PrivateRoute>} />
               <Route path="student/attendance" element={<PrivateRoute role="student"><MarkAttendance /></PrivateRoute>} />
               <Route path="student/history" element={<PrivateRoute role="student"><AttendanceHistory /></PrivateRoute>} />
+              <Route path="student/register-face" element={<PrivateRoute role="student"><RegisterFace /></PrivateRoute>} />
               <Route path="teacher/dashboard" element={<PrivateRoute role="teacher"><TeacherDashboard /></PrivateRoute>} />
               <Route path="teacher/timetable" element={<PrivateRoute role="teacher"><TeacherTimetable /></PrivateRoute>} />
               <Route path="teacher/class/:id" element={<PrivateRoute role="teacher"><ClassAttendance /></PrivateRoute>} />

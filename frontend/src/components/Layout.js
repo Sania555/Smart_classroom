@@ -15,6 +15,7 @@ export default function Layout() {
   const studentLinks = [
     { to: '/student/dashboard', label: '🏠 Dashboard' },
     { to: '/student/timetable', label: '📅 Timetable' },
+    { to: '/student/register-face', label: '🤳 Register Face' },
     { to: '/student/attendance', label: '📷 Mark Attendance' },
     { to: '/student/history', label: '📊 History' },
     { to: '/notifications', label: `🔔 Notifications${unread ? ` (${unread})` : ''}` },

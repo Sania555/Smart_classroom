@@ -60,15 +60,28 @@ exports.markAttendance = async (req, res) => {
       await OTP.findByIdAndUpdate(otpRecord._id, { isUsed: true });
     }
 
-    // Face validation alert
-    if (method === 'face' && faceMatchScore < 0.6) {
-      const teacher = await require('../models/Teacher').findById(cls.teacherId);
-      if (teacher) {
-        await notifyTeacher(io, teacher, 'teacher_alert',
-          `🔍 Face Mismatch Alert`,
-          `Possible face mismatch detected for a student in ${cls.subject}`,
-          { studentId, timetableId, score: faceMatchScore }
-        );
+    // Face validation — block if score too low or no descriptor registered
+    if (method === 'face') {
+      const student = await Student.findById(studentId);
+
+      if (!student.faceDescriptor || student.faceDescriptor.length === 0) {
+        return res.status(400).json({ message: 'Face not registered. Please register your face or use OTP method.' });
+      }
+
+      if (!faceMatchScore || faceMatchScore < 0.5) {
+        return res.status(400).json({ message: 'Face verification failed. Score too low. Please try again in better lighting.' });
+      }
+
+      // Alert teacher if score is low but above threshold (possible impersonation attempt)
+      if (faceMatchScore < 0.65) {
+        const teacher = await require('../models/Teacher').findById(cls.teacherId);
+        if (teacher) {
+          await notifyTeacher(io, teacher, 'teacher_alert',
+            `🔍 Face Mismatch Alert`,
+            `Low face match score (${(faceMatchScore * 100).toFixed(0)}%) for a student in ${cls.subject}. Possible impersonation.`,
+            { studentId, timetableId, score: faceMatchScore }
+          );
+        }
       }
     }
 

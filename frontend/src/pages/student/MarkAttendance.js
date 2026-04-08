@@ -84,11 +84,27 @@ export default function MarkAttendance() {
     try {
       const canvas = captureFrame(videoRef.current, canvasRef.current);
       const descriptor = await getFaceDescriptor(canvas);
-      if (!descriptor) { toast.error('No face detected. Please look at the camera.'); setScanning(false); return; }
+      if (!descriptor) {
+        toast.error('No face detected. Please look directly at the camera.');
+        setScanning(false);
+        return;
+      }
 
-      const score = user.faceDescriptor?.length ? compareFaces(user.faceDescriptor, descriptor) : 0.8;
+      // Block if student has no registered face descriptor
+      if (!user.faceDescriptor || user.faceDescriptor.length === 0) {
+        toast.error('Your face is not registered. Please contact your teacher to register your face first, or use OTP method.');
+        setScanning(false);
+        return;
+      }
 
-      if (score < 0.5) { toast.error('Face not recognized. Try again or use OTP.'); setScanning(false); return; }
+      const score = compareFaces(user.faceDescriptor, descriptor);
+      console.log('Face match score:', score); // helpful for debugging
+
+      if (score < 0.5) {
+        toast.error(`Face not recognized (score: ${(score * 100).toFixed(0)}%). Make sure you are in good lighting and looking at the camera.`);
+        setScanning(false);
+        return;
+      }
 
       await submitAttendance('face', score);
     } catch (err) {
