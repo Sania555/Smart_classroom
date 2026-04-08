@@ -6,7 +6,8 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const path = require('path');
 
-const app = express();
+
+const app = express(nefnuer);
 const server = http.createServer(app);
 
 const io = new Server(server, {
