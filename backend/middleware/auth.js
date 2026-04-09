@@ -19,6 +19,9 @@ const protect = async (req, res, next) => {
       req.user = await Student.findById(decoded.id).select('-password');
     } else if (decoded.type === 'teacher') {
       req.user = await Teacher.findById(decoded.id).select('-password');
+    } else if (decoded.type === 'admin') {
+      const Admin = require('../models/Admin');
+      req.user = await Admin.findById(decoded.id).select('-password');
     }
 
     if (!req.user) return res.status(401).json({ message: 'User not found' });

@@ -23,6 +23,9 @@ const attendanceSchema = new mongoose.Schema({
   faceMatchScore: { type: Number, default: 0 },
   absentReason: { type: String, default: '' },
   otpUsed: { type: String, default: '' },
+  selfieSnapshot: { type: String, default: '' }, // base64 or file path
+  lastAttemptAt: { type: Date }, // for cooldown tracking
+  failedAttempts: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
 });
 

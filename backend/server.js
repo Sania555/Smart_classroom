@@ -35,6 +35,8 @@ app.use('/api/attendance', require('./routes/attendance'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/reports', require('./routes/reports'));
+app.use('/api/leave', require('./routes/leave'));
+app.use('/api/admin', require('./routes/admin'));
 
 // Socket.io connection
 io.on('connection', (socket) => {

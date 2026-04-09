@@ -7,6 +7,7 @@ const otpSchema = new mongoose.Schema({
   date: { type: Date, required: true },
   expiresAt: { type: Date, required: true },
   isUsed: { type: Boolean, default: false },
+  isQR: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 });
 

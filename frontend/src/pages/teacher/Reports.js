@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import * as XLSX from 'xlsx';
 import styles from './Reports.module.css';
 
 export default function Reports() {
@@ -36,6 +37,24 @@ export default function Reports() {
     window.open(`/api/reports/attendance?${params}`, '_blank');
   };
 
+  const downloadExcel = () => {
+    if (!records.length) return toast.error('No data to export');
+    const rows = records.map(r => ({
+      Date: new Date(r.date).toLocaleDateString(),
+      Student: r.studentId?.name,
+      'Roll No': r.studentId?.rollNumber,
+      Class: r.studentId?.class,
+      Subject: r.timetableId?.subject,
+      Status: r.status,
+      Method: r.method || '',
+      'Marked At': r.markedAt ? new Date(r.markedAt).toLocaleTimeString() : '',
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
+    XLSX.writeFile(wb, 'attendance_report.xlsx');
+  };
+
   const statusColor = { present: '#16a34a', late: '#d97706', absent: '#dc2626' };
 
   return (
@@ -58,9 +77,10 @@ export default function Reports() {
             📊 Subject-wise
           </button>
           {records.length > 0 && (
-            <button className={`${styles.btn} ${styles.btnGray}`} onClick={downloadCSV}>
-              ⬇️ Export CSV
-            </button>
+            <>
+              <button className={`${styles.btn} ${styles.btnGray}`} onClick={downloadCSV}>⬇️ CSV</button>
+              <button className={`${styles.btn} ${styles.btnGray}`} onClick={downloadExcel}>📊 Excel</button>
+            </>
           )}
         </div>
       </div>

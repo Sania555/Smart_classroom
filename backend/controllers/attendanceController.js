@@ -16,7 +16,7 @@ const getDistanceMeters = (lat1, lon1, lat2, lon2) => {
 exports.markAttendance = async (req, res) => {
   try {
     const io = req.app.get('io');
-    const { timetableId, method, faceMatchScore: rawScore, location, otp, liveDescriptor } = req.body;
+    const { timetableId, method, faceMatchScore: rawScore, location, otp, liveDescriptor, selfieSnapshot, qrToken } = req.body;
     let faceMatchScore = rawScore;
     const studentId = req.userId;
 
@@ -35,21 +35,51 @@ exports.markAttendance = async (req, res) => {
 
     const status = diff <= 0 ? 'present' : diff <= 15 ? 'late' : 'absent';
 
-    // GPS validation
+    // GPS validation — required if teacher set a location
     let locationValid = false;
-    if (location && cls.location?.latitude) {
+    if (cls.location?.latitude && cls.location?.longitude) {
+      if (!location) {
+        return res.status(400).json({ message: 'Location is required for this class. Please enable GPS and try again.' });
+      }
       const dist = getDistanceMeters(location.latitude, location.longitude, cls.location.latitude, cls.location.longitude);
       locationValid = dist <= 100;
       if (!locationValid) {
+        // Mark student absent for being outside radius
+        const today2 = new Date(now); today2.setHours(0, 0, 0, 0);
+        await Attendance.findOneAndUpdate(
+          { studentId, timetableId, date: today2 },
+          { status: 'absent', method, markedAt: now, location, locationValid: false, faceMatchScore: 0 },
+          { upsert: true, new: true }
+        );
         const teacher = await require('../models/Teacher').findById(cls.teacherId);
         if (teacher) {
           await notifyTeacher(io, teacher, 'teacher_alert',
-            `📍 Location Alert`,
-            `Student is outside classroom radius for ${cls.subject}`,
+            `📍 Location Mismatch`,
+            `A student is outside classroom radius for ${cls.subject} (${Math.round(dist)}m away). Marked absent.`,
             { studentId, timetableId, distance: Math.round(dist) }
           );
         }
+        return res.status(400).json({ message: `You are ${Math.round(dist)}m away from the classroom. Must be within 100m. Marked absent.` });
       }
+    }
+
+    // Cooldown: 60 seconds between failed attempts
+    const cooldownRecord = await Attendance.findOne({ studentId, timetableId, date: today });
+    if (cooldownRecord?.lastAttemptAt) {
+      const secsSince = (now - new Date(cooldownRecord.lastAttemptAt)) / 1000;
+      if (secsSince < 60 && cooldownRecord.failedAttempts >= 3) {
+        return res.status(429).json({ message: `Too many failed attempts. Please wait ${Math.ceil(60 - secsSince)} seconds.` });
+      }
+    }
+
+    // QR validation
+    if (method === 'qr') {
+      if (!qrToken) return res.status(400).json({ message: 'QR token missing' });
+      const qrRecord = await OTP.findOne({ timetableId, otp: qrToken, date: today, isUsed: false, isQR: true });
+      if (!qrRecord || qrRecord.expiresAt < now) {
+        return res.status(400).json({ message: 'Invalid or expired QR code' });
+      }
+      // QR is shared — don't mark as used (multiple students can scan)
     }
 
     // OTP validation
@@ -85,6 +115,12 @@ exports.markAttendance = async (req, res) => {
         console.log(`Server face check — distance: ${distance.toFixed(3)}, score: ${(serverScore * 100).toFixed(1)}%`);
 
         if (distance >= 0.5) {
+          // Track failed attempt for cooldown
+          await Attendance.findOneAndUpdate(
+            { studentId, timetableId, date: today },
+            { $inc: { failedAttempts: 1 }, lastAttemptAt: now },
+            { upsert: true }
+          );
           // Alert teacher about failed attempt
           const teacher = await require('../models/Teacher').findById(cls.teacherId);
           if (teacher) {
@@ -125,7 +161,7 @@ exports.markAttendance = async (req, res) => {
 
     const attendance = await Attendance.findOneAndUpdate(
       { studentId, timetableId, date: today },
-      { status, method, markedAt: now, location, locationValid, faceMatchScore: faceMatchScore || 0 },
+      { status, method, markedAt: now, location, locationValid, faceMatchScore: faceMatchScore || 0, selfieSnapshot: selfieSnapshot || '', failedAttempts: 0, lastAttemptAt: now },
       { upsert: true, new: true }
     );
 
@@ -239,6 +275,27 @@ exports.generateOTP = async (req, res) => {
   }
 };
 
+exports.generateQR = async (req, res) => {
+  try {
+    const QRCode = require('qrcode');
+    const { timetableId } = req.body;
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 20 * 60 * 1000);
+    const today = new Date(now); today.setHours(0, 0, 0, 0);
+
+    // Reuse OTP record as QR token
+    const token = require('uuid').v4();
+    await OTP.findOneAndDelete({ timetableId, date: today });
+    await OTP.create({ timetableId, teacherId: req.userId, otp: token, date: today, expiresAt, isQR: true });
+
+    const qrData = JSON.stringify({ timetableId, token, expiresAt });
+    const qrImage = await QRCode.toDataURL(qrData);
+    res.json({ qrImage, token, expiresAt });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 exports.manualMarkAttendance = async (req, res) => {
   try {
     const { studentId, timetableId, status, date } = req.body;
@@ -251,6 +308,54 @@ exports.manualMarkAttendance = async (req, res) => {
       { upsert: true, new: true }
     );
     res.json(record);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.getAttendanceHeatmap = async (req, res) => {
+  try {
+    const studentId = req.userId;
+    const { months = 3 } = req.query;
+    const from = new Date();
+    from.setMonth(from.getMonth() - parseInt(months));
+
+    const records = await Attendance.find({ studentId, date: { $gte: from } })
+      .populate('timetableId', 'subject')
+      .select('date status timetableId');
+
+    // Group by date
+    const map = {};
+    for (const r of records) {
+      const key = r.date.toISOString().split('T')[0];
+      if (!map[key]) map[key] = { date: key, present: 0, late: 0, absent: 0, total: 0 };
+      map[key][r.status]++;
+      map[key].total++;
+    }
+    res.json(Object.values(map));
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.getSubjectTrend = async (req, res) => {
+  try {
+    const { class: cls, section } = req.query;
+    const timetables = await Timetable.find({ teacherId: req.userId, isActive: true, ...(cls && { class: cls }), ...(section && { section }) });
+
+    const result = [];
+    for (const t of timetables) {
+      const records = await Attendance.find({ timetableId: t._id }).sort({ date: 1 });
+      const byDate = {};
+      for (const r of records) {
+        const key = r.date.toISOString().split('T')[0];
+        if (!byDate[key]) byDate[key] = { date: key, present: 0, total: 0 };
+        if (r.status !== 'absent') byDate[key].present++;
+        byDate[key].total++;
+      }
+      result.push({ subject: t.subject, timetableId: t._id, trend: Object.values(byDate) });
+    }
+    res.json(result);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

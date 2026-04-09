@@ -5,7 +5,59 @@ import toast from 'react-hot-toast';
 import styles from './Timetable.module.css';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
+const MINUTES = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
 const empty = { subject: '', class: '', section: 'A', dayOfWeek: 'Monday', startTime: '', endTime: '', duration: 60, classroom: '', location: { latitude: 0, longitude: 0 } };
+
+// "08:30" → { hour: "08", minute: "30", period: "AM" }
+function to12h(time24) {
+  if (!time24) return { hour: '08', minute: '00', period: 'AM' };
+  const [h, m] = time24.split(':').map(Number);
+  const period = h < 12 ? 'AM' : 'PM';
+  const hour = h % 12 === 0 ? '12' : String(h % 12).padStart(2, '0');
+  return { hour, minute: String(m).padStart(2, '0'), period };
+}
+
+// { hour: "08", minute: "30", period: "AM" } → "08:30"
+function to24h({ hour, minute, period }) {
+  let h = parseInt(hour, 10);
+  if (period === 'AM' && h === 12) h = 0;
+  if (period === 'PM' && h !== 12) h += 12;
+  return `${String(h).padStart(2, '0')}:${minute}`;
+}
+
+// "08:30" → "8:30 AM"
+function formatTime(time24) {
+  if (!time24) return '';
+  const { hour, minute, period } = to12h(time24);
+  return `${parseInt(hour, 10)}:${minute} ${period}`;
+}
+
+function TimePicker({ value, onChange, label }) {
+  const { hour, minute, period } = to12h(value);
+  const update = (field, val) => {
+    const updated = { hour, minute, period, [field]: val };
+    onChange(to24h(updated));
+  };
+  return (
+    <div className={styles.timePicker}>
+      <label className={styles.timeLabel}>{label}</label>
+      <div className={styles.timeInputs}>
+        <select className={styles.timeSelect} value={hour} onChange={e => update('hour', e.target.value)}>
+          {HOURS.map(h => <option key={h}>{h}</option>)}
+        </select>
+        <span className={styles.timeSep}>:</span>
+        <select className={styles.timeSelect} value={minute} onChange={e => update('minute', e.target.value)}>
+          {MINUTES.map(m => <option key={m}>{m}</option>)}
+        </select>
+        <select className={styles.periodSelect} value={period} onChange={e => update('period', e.target.value)}>
+          <option>AM</option>
+          <option>PM</option>
+        </select>
+      </div>
+    </div>
+  );
+}
 
 export default function TeacherTimetable() {
   const { user } = useAuth();
@@ -64,9 +116,8 @@ export default function TeacherTimetable() {
             <select className={styles.input} value={form.dayOfWeek} onChange={e => set('dayOfWeek', e.target.value)}>
               {DAYS.map(d => <option key={d}>{d}</option>)}
             </select>
-            <input className={styles.input} type="time" required value={form.startTime} onChange={e => set('startTime', e.target.value)} />
-            <input className={styles.input} type="time" required value={form.endTime} onChange={e => set('endTime', e.target.value)} />
-            <input className={styles.input} type="number" placeholder="Duration (min)" value={form.duration} onChange={e => set('duration', e.target.value)} />
+            <TimePicker label="Start Time" value={form.startTime} onChange={v => set('startTime', v)} />
+            <TimePicker label="End Time" value={form.endTime} onChange={v => set('endTime', v)} />            <input className={styles.input} type="number" placeholder="Duration (min)" value={form.duration} onChange={e => set('duration', e.target.value)} />
             <input className={styles.input} placeholder="Classroom (e.g. Room 204)" required value={form.classroom} onChange={e => set('classroom', e.target.value)} />
             <input className={styles.input} type="number" step="any" placeholder="Latitude (GPS)" value={form.location.latitude || ''} onChange={e => set('location', { ...form.location, latitude: parseFloat(e.target.value) || 0 })} />
             <input className={styles.input} type="number" step="any" placeholder="Longitude (GPS)" value={form.location.longitude || ''} onChange={e => set('location', { ...form.location, longitude: parseFloat(e.target.value) || 0 })} />
@@ -90,7 +141,7 @@ export default function TeacherTimetable() {
               <div key={cls._id} className={styles.classRow}>
                 <div className={styles.classInfo}>
                   <strong>{cls.subject}</strong>
-                  <span>{cls.startTime} – {cls.endTime} ({cls.duration} min)</span>
+                  <span>{formatTime(cls.startTime)} – {formatTime(cls.endTime)} ({cls.duration} min)</span>
                   <span>📍 {cls.classroom} · Class {cls.class}{cls.section}</span>
                 </div>
                 <button className={styles.deleteBtn} onClick={() => handleDelete(cls._id)}>🗑</button>

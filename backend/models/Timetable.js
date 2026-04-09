@@ -4,8 +4,8 @@ const timetableSchema = new mongoose.Schema({
   subject: { type: String, required: true },
   teacherId: { type: mongoose.Schema.Types.ObjectId, ref: 'Teacher', required: true },
   teacherName: { type: String, required: true },
-  class: { type: String, required: true },
-  section: { type: String, default: 'A' },
+  class: { type: String, required: true, trim: true, uppercase: true },
+  section: { type: String, default: 'A', trim: true, uppercase: true },
   dayOfWeek: {
     type: String,
     enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],

@@ -181,7 +181,7 @@ module.exports = (io) => {
     }
   });
 
-  // Weekly Monday 7:00 AM: weekly report
+  // Weekly Monday 7:00 AM: weekly report + low attendance warning
   cron.schedule('0 7 * * 1', async () => {
     try {
       const today = new Date();
@@ -200,6 +200,24 @@ module.exports = (io) => {
           `This week: ${present} present, ${late} late, ${absent} absent. Attendance: ${pct}%`,
           { present, late, absent, percentage: pct }
         );
+
+        // Low attendance warning — below 75%
+        if (records.length >= 3 && pct < 75) {
+          const warningHtml = `<div style="font-family:sans-serif;max-width:500px;margin:auto">
+            <h2 style="color:#dc2626">⚠️ Low Attendance Warning</h2>
+            <p>Dear Parent/Guardian,</p>
+            <p><strong>${student.name}</strong>'s attendance this week is <strong style="color:#dc2626">${pct}%</strong>, which is below the required 75%.</p>
+            <p>Present: ${present} | Late: ${late} | Absent: ${absent} | Total: ${records.length}</p>
+            <p>Please ensure regular attendance to avoid academic consequences.</p>
+          </div>`;
+
+          if (student.parentEmail) {
+            await sendEmail({ to: student.parentEmail, subject: `⚠️ Low Attendance Alert: ${student.name}`, html: warningHtml });
+          }
+          if (student.notificationPreferences?.email) {
+            await sendEmail({ to: student.email, subject: `⚠️ Your attendance is below 75%`, html: warningHtml });
+          }
+        }
       }
     } catch (err) {
       console.error('Cron weekly error:', err.message);

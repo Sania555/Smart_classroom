@@ -11,6 +11,7 @@ export default function ClassAttendance() {
   const [records, setRecords] = useState([]);
   const [cls, setCls] = useState(null);
   const [otp, setOtp] = useState(null);
+  const [qr, setQr] = useState(null);
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
@@ -34,8 +35,18 @@ export default function ClassAttendance() {
     try {
       const { data } = await api.post('/attendance/otp/generate', { timetableId: id });
       setOtp(data);
+      setQr(null);
       toast.success(`OTP: ${data.otp}`);
     } catch { toast.error('Failed to generate OTP'); }
+  };
+
+  const generateQR = async () => {
+    try {
+      const { data } = await api.post('/attendance/qr/generate', { timetableId: id });
+      setQr(data);
+      setOtp(null);
+      toast.success('QR code generated');
+    } catch { toast.error('Failed to generate QR'); }
   };
 
   const sendReminder = async () => {
@@ -74,6 +85,7 @@ export default function ClassAttendance() {
 
       <div className={styles.actions}>
         <button className={styles.actionBtn} onClick={generateOTP}>🔑 Generate OTP</button>
+        <button className={styles.actionBtn} onClick={generateQR}>📱 Generate QR</button>
         <button className={`${styles.actionBtn} ${styles.reminderBtn}`} onClick={sendReminder}>📢 Send Reminders</button>
       </div>
 
@@ -81,6 +93,13 @@ export default function ClassAttendance() {
         <div className={styles.otpDisplay}>
           <span>OTP: <strong>{otp.otp}</strong></span>
           <span>Expires: {new Date(otp.expiresAt).toLocaleTimeString()}</span>
+        </div>
+      )}
+
+      {qr && (
+        <div className={styles.qrDisplay}>
+          <p>Show this QR to students — expires {new Date(qr.expiresAt).toLocaleTimeString()}</p>
+          <img src={qr.qrImage} alt="QR Code" className={styles.qrImage} />
         </div>
       )}
 

@@ -1,0 +1,33 @@
+.page { max-width: 900px; }
+.title { font-size: 22px; color: var(--text); margin-bottom: 16px; }
+.tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+.tab { padding: 9px 20px; border: 2px solid var(--border); border-radius: 20px; background: var(--bg2); cursor: pointer; font-size: 14px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
+.tab.active { background: var(--primary); border-color: var(--primary); color: white; }
+.count { background: #dc2626; color: white; border-radius: 10px; padding: 1px 7px; font-size: 11px; font-weight: 700; }
+.tab.active .count { background: rgba(255,255,255,0.3); }
+.list { display: flex; flex-direction: column; gap: 10px; }
+.empty { text-align: center; padding: 40px; color: var(--text3); background: var(--bg2); border-radius: 12px; }
+.item { display: flex; align-items: center; justify-content: space-between; background: var(--bg2); border-radius: 10px; padding: 14px 18px; box-shadow: var(--card-shadow); gap: 16px; }
+.itemInfo { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.itemInfo strong { font-size: 15px; color: var(--text); }
+.itemInfo span { font-size: 13px; color: var(--text2); }
+.roll { font-weight: 400; color: var(--text3); }
+.reason { font-style: italic; }
+.comment { color: var(--primary) !important; font-weight: 500; }
+.itemRight { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.badge { padding: 4px 12px; border-radius: 20px; color: white; font-size: 12px; font-weight: 600; text-transform: capitalize; }
+.reviewBtn { padding: 7px 16px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal { background: var(--bg2); border-radius: 16px; padding: 28px; width: 420px; max-width: 95vw; display: flex; flex-direction: column; gap: 12px; }
+.modal h3 { font-size: 18px; color: var(--text); }
+.modal p { font-size: 14px; color: var(--text2); }
+.reason { font-style: italic; color: var(--text) !important; }
+.statusBtns { display: flex; gap: 10px; }
+.statusBtn { flex: 1; padding: 10px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg3); cursor: pointer; font-size: 14px; color: var(--text2); }
+.statusBtn.approved { border-color: #16a34a; background: #dcfce7; color: #16a34a; font-weight: 600; }
+.statusBtn.rejected { border-color: #dc2626; background: #fee2e2; color: #dc2626; font-weight: 600; }
+.textarea { padding: 10px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--input-bg); color: var(--text); outline: none; resize: vertical; }
+.textarea:focus { border-color: var(--primary); }
+.modalBtns { display: flex; gap: 10px; }
+.btn { flex: 1; padding: 11px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; }
+.btnCancel { background: var(--border); color: var(--text2); }

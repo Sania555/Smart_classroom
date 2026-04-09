@@ -1,0 +1,21 @@
+.page { max-width: 800px; }
+.title { font-size: 22px; color: var(--text); margin-bottom: 16px; }
+.tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+.tab { padding: 9px 20px; border: 2px solid var(--border); border-radius: 20px; background: var(--bg2); cursor: pointer; font-size: 14px; color: var(--text2); }
+.tab.active { background: var(--primary); border-color: var(--primary); color: white; }
+.addBtn { padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+.form { background: var(--bg2); border-radius: 12px; padding: 20px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--card-shadow); }
+.input { padding: 10px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--input-bg); color: var(--text); outline: none; }
+.input:focus { border-color: var(--primary); }
+.textarea { padding: 10px 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--input-bg); color: var(--text); outline: none; resize: vertical; }
+.textarea:focus { border-color: var(--primary); }
+.submitBtn { padding: 11px; background: #16a34a; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; }
+.list { display: flex; flex-direction: column; gap: 10px; }
+.empty { text-align: center; padding: 40px; color: var(--text3); background: var(--bg2); border-radius: 12px; }
+.item { display: flex; align-items: center; justify-content: space-between; background: var(--bg2); border-radius: 10px; padding: 14px 18px; box-shadow: var(--card-shadow); }
+.itemInfo { display: flex; flex-direction: column; gap: 3px; }
+.itemInfo strong { font-size: 15px; color: var(--text); }
+.itemInfo span { font-size: 13px; color: var(--text2); }
+.reason { font-style: italic; }
+.comment { color: var(--primary) !important; font-weight: 500; }
+.badge { padding: 4px 12px; border-radius: 20px; color: white; font-size: 12px; font-weight: 600; text-transform: capitalize; white-space: nowrap; }

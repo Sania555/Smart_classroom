@@ -8,6 +8,7 @@ const teacherSchema = new mongoose.Schema({
   password: { type: String, required: true },
   subject: { type: String, required: true },
   employeeId: { type: String, required: true, unique: true },
+  department: { type: String, default: '' },
   isActive: { type: Boolean, default: true },
   pushSubscription: { type: Object, default: null },
   notificationPreferences: {

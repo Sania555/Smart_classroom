@@ -49,8 +49,8 @@ exports.getTimetable = async (req, res) => {
   try {
     const { class: cls, section, teacherId, day } = req.query;
     const filter = { isActive: true };
-    if (cls) filter.class = cls;
-    if (section) filter.section = section;
+    if (cls) filter.class = cls.trim().toUpperCase();
+    if (section) filter.section = section.trim().toUpperCase();
     if (teacherId) filter.teacherId = teacherId;
     if (day) filter.dayOfWeek = day;
 
@@ -65,8 +65,8 @@ exports.getMyTimetable = async (req, res) => {
   try {
     let filter = { isActive: true };
     if (req.userType === 'student') {
-      filter.class = req.user.class;
-      filter.section = req.user.section;
+      filter.class = req.user.class.trim().toUpperCase();
+      filter.section = req.user.section.trim().toUpperCase();
     } else {
       filter.teacherId = req.userId;
     }
@@ -84,8 +84,8 @@ exports.getTodayClasses = async (req, res) => {
     let filter = { dayOfWeek: today, isActive: true };
 
     if (req.userType === 'student') {
-      filter.class = req.user.class;
-      filter.section = req.user.section;
+      filter.class = req.user.class.trim().toUpperCase();
+      filter.section = req.user.section.trim().toUpperCase();
     } else {
       filter.teacherId = req.userId;
     }

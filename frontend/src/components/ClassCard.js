@@ -3,6 +3,14 @@ import styles from './ClassCard.module.css';
 
 const dayColors = { Monday: '#4f46e5', Tuesday: '#0891b2', Wednesday: '#059669', Thursday: '#d97706', Friday: '#dc2626' };
 
+function formatTime(time24) {
+  if (!time24) return '';
+  const [h, m] = time24.split(':').map(Number);
+  const period = h < 12 ? 'AM' : 'PM';
+  const hour = h % 12 === 0 ? 12 : h % 12;
+  return `${hour}:${String(m).padStart(2, '0')} ${period}`;
+}
+
 export default function ClassCard({ cls, children, compact }) {
   const now = new Date();
   const [sh, sm] = cls.startTime.split(':').map(Number);
@@ -24,13 +32,13 @@ export default function ClassCard({ cls, children, compact }) {
         </div>
         {!compact && (
           <>
-            <div className={styles.meta}>⏰ {cls.startTime} – {cls.endTime} ({cls.duration} min)</div>
+            <div className={styles.meta}>⏰ {formatTime(cls.startTime)} – {formatTime(cls.endTime)} ({cls.duration} min)</div>
             <div className={styles.meta}>📍 {cls.classroom}</div>
             <div className={styles.meta}>👨‍🏫 {cls.teacherName}</div>
             <div className={styles.meta}>🏫 Class {cls.class}{cls.section}</div>
           </>
         )}
-        {compact && <div className={styles.meta}>{cls.startTime} · {cls.classroom}</div>}
+        {compact && <div className={styles.meta}>{formatTime(cls.startTime)} · {cls.classroom}</div>}
         {children && <div className={styles.actions}>{children}</div>}
       </div>
     </div>
