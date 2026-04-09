@@ -92,21 +92,25 @@ export default function MarkAttendance() {
 
       // Block if student has no registered face descriptor
       if (!user.faceDescriptor || user.faceDescriptor.length === 0) {
-        toast.error('Your face is not registered. Please contact your teacher to register your face first, or use OTP method.');
+        toast.error('Your face is not registered. Go to 🤳 Register Face first.');
         setScanning(false);
         return;
       }
 
-      const score = compareFaces(user.faceDescriptor, descriptor);
-      console.log('Face match score:', score); // helpful for debugging
+      const { match, distance, score } = compareFaces(user.faceDescriptor, descriptor);
+      console.log(`Face check — distance: ${distance.toFixed(3)}, score: ${(score * 100).toFixed(1)}%, match: ${match}`);
 
-      if (score < 0.5) {
-        toast.error(`Face not recognized (score: ${(score * 100).toFixed(0)}%). Make sure you are in good lighting and looking at the camera.`);
+      if (!match) {
+        toast.error(
+          `Face not recognized (distance: ${distance.toFixed(2)}). Make sure you are in good lighting and looking at the camera.`,
+          { duration: 5000 }
+        );
         setScanning(false);
         return;
       }
 
-      await submitAttendance('face', score);
+      // Send live descriptor to backend for server-side verification too
+      await submitAttendance('face', score, descriptor);
     } catch (err) {
       toast.error('Face scan failed: ' + err.message);
     } finally {
@@ -116,15 +120,16 @@ export default function MarkAttendance() {
 
   const handleOTPSubmit = async () => {
     if (!otp || otp.length !== 6) return toast.error('Enter 6-digit OTP');
-    await submitAttendance('otp', 0);
+    await submitAttendance('otp', 0, null);
   };
 
-  const submitAttendance = async (methodType, score) => {
+  const submitAttendance = async (methodType, score, liveDescriptor) => {
     try {
       const { data } = await api.post('/attendance/mark', {
         timetableId: selected._id,
         method: methodType,
         faceMatchScore: score,
+        liveDescriptor: liveDescriptor, // sent to backend for server-side verification
         location,
         otp: methodType === 'otp' ? otp : undefined,
       });

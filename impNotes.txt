@@ -1,0 +1,7 @@
+username DB : gangaiammal435_db_user
+pass DB : pVQR5NnvYVyDQkpI
+connection strin : mongodb+srv://gangaiammal435_db_user:<db_password>@smartclassroomkiro.lmhcynt.mongodb.net/?appName=smartClassroomKiro
+app pass email : gwoo egac hwrj mhfz
+
+
+compass conn string : mongodb://localhost:27017/

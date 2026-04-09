@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 const path = require('path');
 
 
-const app = express(nefnuer);
+const app = express();
 const server = http.createServer(app);
 
 const io = new Server(server, {

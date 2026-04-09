@@ -23,12 +23,16 @@ export const getFaceDescriptor = async (imageElement) => {
 };
 
 export const compareFaces = (descriptor1, descriptor2) => {
-  if (!descriptor1 || !descriptor2) return 0;
+  if (!descriptor1 || !descriptor2) return { match: false, distance: 1, score: 0 };
   const d1 = new Float32Array(descriptor1);
   const d2 = new Float32Array(descriptor2);
   const distance = faceapi.euclideanDistance(d1, d2);
-  // Convert distance to similarity score (0-1, higher = more similar)
-  return Math.max(0, 1 - distance);
+  // face-api.js standard: distance < 0.6 = same person
+  // Lower distance = better match
+  // We return both distance and a 0-1 score for display
+  const score = Math.max(0, 1 - distance);
+  const match = distance < 0.5; // strict threshold — 0.5 is safer than 0.6
+  return { match, distance, score };
 };
 
 export const startVideoStream = async (videoElement) => {

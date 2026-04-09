@@ -16,7 +16,8 @@ const getDistanceMeters = (lat1, lon1, lat2, lon2) => {
 exports.markAttendance = async (req, res) => {
   try {
     const io = req.app.get('io');
-    const { timetableId, method, faceMatchScore, location, otp } = req.body;
+    const { timetableId, method, faceMatchScore: rawScore, location, otp, liveDescriptor } = req.body;
+    let faceMatchScore = rawScore;
     const studentId = req.userId;
 
     const cls = await Timetable.findById(timetableId);
@@ -60,28 +61,60 @@ exports.markAttendance = async (req, res) => {
       await OTP.findByIdAndUpdate(otpRecord._id, { isUsed: true });
     }
 
-    // Face validation — block if score too low or no descriptor registered
+    // Face validation — backend independently re-verifies using stored descriptor
     if (method === 'face') {
       const student = await Student.findById(studentId);
 
       if (!student.faceDescriptor || student.faceDescriptor.length === 0) {
-        return res.status(400).json({ message: 'Face not registered. Please register your face or use OTP method.' });
+        return res.status(400).json({ message: 'Face not registered. Please register your face first or use OTP.' });
       }
 
-      if (!faceMatchScore || faceMatchScore < 0.5) {
-        return res.status(400).json({ message: 'Face verification failed. Score too low. Please try again in better lighting.' });
-      }
+      // If live descriptor sent, do server-side euclidean distance check
+      if (liveDescriptor && Array.isArray(liveDescriptor) && liveDescriptor.length === 128) {
+        const stored = new Float32Array(student.faceDescriptor);
+        const live = new Float32Array(liveDescriptor);
 
-      // Alert teacher if score is low but above threshold (possible impersonation attempt)
-      if (faceMatchScore < 0.65) {
-        const teacher = await require('../models/Teacher').findById(cls.teacherId);
-        if (teacher) {
-          await notifyTeacher(io, teacher, 'teacher_alert',
-            `🔍 Face Mismatch Alert`,
-            `Low face match score (${(faceMatchScore * 100).toFixed(0)}%) for a student in ${cls.subject}. Possible impersonation.`,
-            { studentId, timetableId, score: faceMatchScore }
-          );
+        // Compute euclidean distance server-side
+        let sum = 0;
+        for (let i = 0; i < stored.length; i++) {
+          sum += (stored[i] - live[i]) ** 2;
         }
+        const distance = Math.sqrt(sum);
+        const serverScore = Math.max(0, 1 - distance);
+
+        console.log(`Server face check — distance: ${distance.toFixed(3)}, score: ${(serverScore * 100).toFixed(1)}%`);
+
+        if (distance >= 0.5) {
+          // Alert teacher about failed attempt
+          const teacher = await require('../models/Teacher').findById(cls.teacherId);
+          if (teacher) {
+            await notifyTeacher(io, teacher, 'teacher_alert',
+              `🚨 Proxy Attendance Attempt`,
+              `Face verification FAILED for a student in ${cls.subject}. Distance: ${distance.toFixed(2)}. Possible proxy attendance.`,
+              { studentId, timetableId, distance, score: serverScore }
+            );
+          }
+          return res.status(400).json({
+            message: `Face verification failed (distance: ${distance.toFixed(2)}). This attempt has been logged and your teacher has been notified.`
+          });
+        }
+
+        // Warn teacher if borderline match
+        if (distance >= 0.4) {
+          const teacher = await require('../models/Teacher').findById(cls.teacherId);
+          if (teacher) {
+            await notifyTeacher(io, teacher, 'teacher_alert',
+              `⚠️ Low Face Match`,
+              `Low confidence face match (distance: ${distance.toFixed(2)}) for a student in ${cls.subject}.`,
+              { studentId, timetableId, distance, score: serverScore }
+            );
+          }
+        }
+
+        faceMatchScore = serverScore; // use server-computed score for storage
+      } else {
+        // No live descriptor sent — reject, don't trust client-only score
+        return res.status(400).json({ message: 'Face descriptor missing. Please try again.' });
       }
     }
 
