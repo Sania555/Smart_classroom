@@ -42,7 +42,7 @@ exports.markAttendance = async (req, res) => {
         return res.status(400).json({ message: 'Location is required for this class. Please enable GPS and try again.' });
       }
       const dist = getDistanceMeters(location.latitude, location.longitude, cls.location.latitude, cls.location.longitude);
-      locationValid = dist <= 100;
+      locationValid = dist <= 200;
       if (!locationValid) {
         // Mark student absent for being outside radius
         const today2 = new Date(now); today2.setHours(0, 0, 0, 0);
@@ -59,7 +59,7 @@ exports.markAttendance = async (req, res) => {
             { studentId, timetableId, distance: Math.round(dist) }
           );
         }
-        return res.status(400).json({ message: `You are ${Math.round(dist)}m away from the classroom. Must be within 100m. Marked absent.` });
+        return res.status(400).json({ message: `You are ${Math.round(dist)}m away from the classroom. Must be within 200m. Marked absent.` });
       }
     }
 

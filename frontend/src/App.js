@@ -51,6 +51,7 @@ export default function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin/dashboard" element={<PrivateRoute role="admin"><AdminDashboard /></PrivateRoute>} />
               <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
                 <Route index element={<HomeRedirect />} />
                 <Route path="student/dashboard" element={<PrivateRoute role="student"><StudentDashboard /></PrivateRoute>} />
@@ -67,7 +68,6 @@ export default function App() {
                 <Route path="teacher/students" element={<PrivateRoute role="teacher"><ManageStudents /></PrivateRoute>} />
                 <Route path="teacher/leave" element={<PrivateRoute role="teacher"><LeaveRequests /></PrivateRoute>} />
                 <Route path="teacher/trends" element={<PrivateRoute role="teacher"><SubjectTrends /></PrivateRoute>} />
-                <Route path="admin/dashboard" element={<PrivateRoute role="admin"><AdminDashboard /></PrivateRoute>} />
                 <Route path="notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
               </Route>
             </Routes>

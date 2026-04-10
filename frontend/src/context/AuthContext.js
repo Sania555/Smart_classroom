@@ -10,27 +10,24 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
-      // Try /auth/me first, then /admin/me for admin tokens
-      api.get('/auth/me')
-        .then(({ data }) => { setUser(data.user); setUserType(data.userType); })
-        .catch(() => {
-          // Try admin endpoint
-          api.get('/admin/stats')
-            .then(() => {
-              // Decode token to get admin info
-              const payload = JSON.parse(atob(token.split('.')[1]));
-              if (payload.type === 'admin') {
-                setUser({ _id: payload.id, name: 'Admin' });
-                setUserType('admin');
-              } else {
-                localStorage.removeItem('token');
-              }
-            })
-            .catch(() => localStorage.removeItem('token'));
-        })
-        .finally(() => setLoading(false));
-    } else {
+    if (!token) { setLoading(false); return; }
+
+    // Decode token type without verifying (verification happens server-side)
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.type === 'admin') {
+        api.get('/admin/me')
+          .then(({ data }) => { setUser(data.user); setUserType('admin'); })
+          .catch(() => localStorage.removeItem('token'))
+          .finally(() => setLoading(false));
+      } else {
+        api.get('/auth/me')
+          .then(({ data }) => { setUser(data.user); setUserType(data.userType); })
+          .catch(() => localStorage.removeItem('token'))
+          .finally(() => setLoading(false));
+      }
+    } catch {
+      localStorage.removeItem('token');
       setLoading(false);
     }
   }, []);
