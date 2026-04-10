@@ -327,7 +327,7 @@ export default function AdminDashboard() {
                       <td>{s.rollNumber}</td>
                       <td>{s.class}{s.section}</td>
                       <td>{s.phone}</td>
-                      <td><span className={styles.statusPill} style={{ background: s.isActive ? '#dcfce7', color: '#16a34a' }}>{s.isActive ? 'Active' : 'Inactive'}</span></td>
+                      <td><span className={styles.statusPill} style={{ background: s.isActive ? '#dcfce7' : '#fee2e2', color: s.isActive ? '#16a34a' : '#dc2626' }}>{s.isActive ? 'Active' : 'Inactive'}</span></td>
                       <td className={styles.actions}>
                         <button className={styles.btnEdit} onClick={() => { setEditing(s); setEditType('students'); }}>✏️</button>
                         <button className={`${styles.btnToggle} ${s.isActive ? styles.btnDeact : styles.btnAct}`} onClick={() => toggleStudent(s._id)}>
@@ -363,7 +363,7 @@ export default function AdminDashboard() {
                       <td>{t.employeeId}</td>
                       <td>{t.subject}</td>
                       <td>{t.phone}</td>
-                      <td><span className={styles.statusPill} style={{ background: t.isActive ? '#dcfce7', color: '#16a34a' }}>{t.isActive ? 'Active' : 'Inactive'}</span></td>
+                      <td><span className={styles.statusPill} style={{ background: t.isActive ? '#dcfce7' : '#fee2e2', color: t.isActive ? '#16a34a' : '#dc2626' }}>{t.isActive ? 'Active' : 'Inactive'}</span></td>
                       <td className={styles.actions}>
                         <button className={styles.btnEdit} onClick={() => { setEditing(t); setEditType('teachers'); }}>✏️</button>
                         <button className={`${styles.btnToggle} ${t.isActive ? styles.btnDeact : styles.btnAct}`} onClick={() => toggleTeacher(t._id)}>
