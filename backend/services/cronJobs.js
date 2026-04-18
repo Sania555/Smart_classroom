@@ -26,7 +26,7 @@ module.exports = (io) => {
   cron.schedule('* * * * *', async () => {
     try {
       const day = getDayName();
-      if (day === 'Sunday' || day === 'Saturday') return;
+      if (day === 'Sunday') return;
 
       const currentMins = getCurrentMinutes();
       const classes = await Timetable.find({ dayOfWeek: day, isActive: true });
@@ -126,8 +126,8 @@ module.exports = (io) => {
     }
   });
 
-  // Daily 8:00 AM: send daily schedule
-  cron.schedule('0 8 * * 1-5', async () => {
+  // Daily 8:00 AM: send daily schedule (Mon–Sat)
+  cron.schedule('0 8 * * 1-6', async () => {
     try {
       const day = getDayName();
       const classes = await Timetable.find({ dayOfWeek: day, isActive: true });
@@ -151,8 +151,8 @@ module.exports = (io) => {
     }
   });
 
-  // Daily 6:00 PM: send daily attendance summary
-  cron.schedule('0 18 * * 1-5', async () => {
+  // Daily 6:00 PM: send daily attendance summary (Mon–Sat)
+  cron.schedule('0 18 * * 1-6', async () => {
     try {
       const today = new Date(); today.setHours(0, 0, 0, 0);
       const students = await Student.find({ isActive: true });

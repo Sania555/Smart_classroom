@@ -3,7 +3,7 @@ import api from '../../services/api';
 import ClassCard from '../../components/ClassCard';
 import styles from './Timetable.module.css';
 
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export default function StudentTimetable() {
   const [timetable, setTimetable] = useState([]);
@@ -42,5 +42,5 @@ export default function StudentTimetable() {
 function getCurrentDay() {
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const d = days[new Date().getDay()];
-  return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].includes(d) ? d : 'Monday';
+  return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].includes(d) ? d : 'Monday';
 }

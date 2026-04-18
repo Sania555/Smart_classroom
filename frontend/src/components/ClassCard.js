@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './ClassCard.module.css';
 
-const dayColors = { Monday: '#4f46e5', Tuesday: '#0891b2', Wednesday: '#059669', Thursday: '#d97706', Friday: '#dc2626' };
+const dayColors = { Monday: '#4f46e5', Tuesday: '#0891b2', Wednesday: '#059669', Thursday: '#d97706', Friday: '#dc2626', Saturday: '#7c3aed' };
 
 function formatTime(time24) {
   if (!time24) return '';

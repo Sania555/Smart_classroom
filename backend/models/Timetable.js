@@ -8,7 +8,7 @@ const timetableSchema = new mongoose.Schema({
   section: { type: String, default: 'A', trim: true, uppercase: true },
   dayOfWeek: {
     type: String,
-    enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+    enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
     required: true,
   },
   startTime: { type: String, required: true }, // "HH:MM" 24h format
